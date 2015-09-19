@@ -11902,7 +11902,7 @@ Should destruction behave virtually? That is, should destruction through a point
 
 **Example**: The common case for a base class is that it's intended to have publicly derived classes, and so calling code is just about sure to use something like a `shared_ptr<base>`:
     
-```
+```cpp
 class base {
 public:
     ~base();                   // BAD, not virtual
@@ -11920,7 +11920,7 @@ class derived : public base { /*...*/ };
 
 In rarer cases, such as policy classes, the class is used as a base class for convenience, not for polymorphic behavior. It is recommended to make those destructors protected and nonvirtual:
 
-```
+```cpp
 class my_policy {
 public:
     virtual ~my_policy();      // BAD, public and virtual
@@ -11977,7 +11977,7 @@ Never allow an error to be reported from a destructor, a resource deallocation f
 
 **Example**:
 
-```
+```cpp
 class nefarious {
 public:
     nefarious()  { /* code that could throw */ }   // ok
@@ -11988,7 +11988,7 @@ public:
 
 * 1. `nefarious` objects are hard to use safely even as local variables:
 
-```
+```cpp
 void test(string& s) {
     nefarious n;          // trouble brewing
     string copy = s;      // copy the string
@@ -11998,7 +11998,7 @@ Here, copying `s` could throw, and if that throws and if `n`'s destructor then a
 
 * 2. Classes with `nefarious` members or bases are also hard to use safely, because their destructors must invoke `nefarious`' destructor, and are similarly poisoned by its poor behavior:
 
-```
+```cpp
 class innocent_bystander {
     nefarious member;     // oops, poisons the enclosing class's destructor
     // ...
@@ -12014,13 +12014,13 @@ Here, if constructing `copy2` throws, we have the same problem because `i`'s des
 
 * 3. You can't reliably create global or static `nefarious` objects either:
 
-```
+```cpp
 static nefarious n;       // oops, any destructor exception can't be caught
 ```
 
 * 4. You can't reliably create arrays of `nefarious`:
 
-```
+```cpp
 void test() {
     std::array<nefarious,10> arr; // this line can std::terminate(!)
 ```
@@ -12029,7 +12029,7 @@ The behavior of arrays is undefined in the presence of destructors that throw be
 
 * 5. You can't use `Nefarious` objects in standard containers:
 
-```
+```cpp
 std::vector<nefarious> vec(10);   // this is line can std::terminate()
 ```
 
@@ -12047,7 +12047,7 @@ Consider the following advice and requirements found in the C++ Standard:
 Deallocation functions, including specifically overloaded `operator delete` and `operator delete[]`, fall into the same category, because they too are used during cleanup in general, and during exception handling in particular, to back out of partial work that needs to be undone.
 Besides destructors and deallocation functions, common error-safety techniques rely also on `swap` operations never failing--in this case, not because they are used to implement a guaranteed rollback, but because they are used to implement a guaranteed commit. For example, here is an idiomatic implementation of `operator=` for a type `T` that performs copy construction followed by a call to a no-fail `swap`:
 
-```
+```cpp
 T& T::operator=( const T& other ) {
     auto temp = other;
     swap(temp);
